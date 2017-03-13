@@ -262,16 +262,47 @@ While NOT Q.empty()
 
 Going back to our first scenario, granting User2 with READ permission on Project1, we could have achieved this in two other ways. One approach would be to use the Permission type hierarchy and Share Project1 with a Super permission of READ (e.g). An actor who has OWNER Permission on an Artifact will also have READ Permission. The other approach would be to Share the Artifact with an Actor that contains the User2. For example if Project1 is Shared with Group1 with READ Permission, then User2 will also have READ Permission on Project1 as a result of being a member of Group1. Similar to handling nested hierarchies in Artifacts, the nested hierarchies in Permission types and Groups can be handled either implicitly or explicitly. The implicit approach will record only the original Sharing  rule and will defer the heavy lifting to the inference time. On the other hand, in the explicit approach, addition records will be created to each nested element. For example when Sharing with OWNER permission additional records will be created to READ and WRITE permission. However we found that most of the Permission Type and Group hierarchies in our use cases are short and flat and always will be of cascade type (e.g. when sharing with a group it is always implied that it is sharing with all the nested members). Therefore the overhead of using the implicit approach is not significant. Hence we use the implicit approach to handle Permission type and Group hierarchies.
 
-Check Permissions: In our model since we put most of the heavy lifting on the sharing and revoking operations, inference operations become straightforward and less costly. The Check Permissions operation tries to find out whether a specific Actor has a specific Permission to a specific Artifact. For example consider that we want find whether User2 has READ Permission to Project1. In our model, which implicitly captures nested aspects in Permissions and Groups, we need to first find all the Permissions which subsume the READ permission and all the groups that User2 is a member of. After finding those, this operation can be easily executed as follows.
+Check Permissions: In our model inference operations become straightforward and less costly because we put most of the heavy lifting on the sharing and revoking operations. The Check Permissions operation determines whether a specific Actor has a specific Permission to a specific Artifact. For example, consider the case where we want to determine whether User2 has READ Permission to Project1. In our model, which implicitly captures nested aspects in Permissions and Groups, we need to first find all the Permissions which subsume the READ permission and all groups that have User2 as a member. After finding those, Check Permissions can be easily executed as follows:
 
-Get all Accessible Actors:
-Search/Browse: In the search operation the objective is to retrieve a list of Artifacts which are accessible to a specific actor based on some permission criteria and  which conforms to a particular search criteria on Artifact properties. As explained earlier, Browse is special case of search with empty Artifact filter criteria. As a practical requirement, when dealing with large return lists, it is also important to handle pagination. As the objective of this operation is to retrieve the list of Artifacts we do a relation join on Artifact and Sharing entities and then apply the filter criteria. In the current implementation, the Artifact filter criteria can be applied on Artifact name, description, owner, parent artifact (if exists), created and updated times and the full text field. Some of the example search/browse queries will be as follows:
-?	Browse without Artifact type constraint: e.g. Select Artifacts where User2 has READ access.
-?	Browse with Artifact type constraint: e.g. Select Artifacts of type EXPERIMENT where User2 has READ access.
-?	Search with Artifact filter criteria: e.g. Select first 10 Artifacts of type EXPERIMENT where User2 has READ access and the Artifact name contains ?Ethylbenzene? and Artifact created during last week.
+\begin{lstlisting}
+Groups := User2.getAllMemberGroups()
+Groups := Groups U User2
+Permissions := READ.getSuperPermissions()
+Permissions := Permissions U READ
+SELECT HasPermission as Count(*) > 0 FROM SHARING WHERE SHARING.ACTOR IN Groups AND SHARING.PERMISSION IN  Permissions AND SHARING.ARTIFACT = Project1
+Return HasPermission
+\end{lstlisting}
+
+Get all Accessible Actors: Sometimes it is useful to view a list of Actors who have Permission to READ or WRITE an Artifact. For example, the Owner of an Artifact may want to review the current list of Actors before granting or revoking sharing permissions. To get the list of Actors we create a relational join between Actors and Sharing entities and then use a filter operation to retrieve the list of Actors who have a particular Permission to an Artifact. For example, the operation to find out the list of Actors who has READ permission to Experiment 1 can be executed as follows:
+
+\begin{lstlisting}
+Permissions := READ.getSuperPermissions()
+Permissions := Permissions U READ
+SELECT ACTOR AS A FROM SHARING JOIN ACTOR WHERE SHARING.PERMISSION IN Permissions AND SHARING.ARTIFACT = Experiment1
+Return A
+\end{lstlisting}
+
+Search/Browse: In the search operation, the objective is to retrieve a list of Artifacts that are accessible to a specific actor based on some permission criteria and that conform to a particular search criteria on Artifact properties. As explained earlier, Browse is special case of search with empty Artifact filter criteria. As a practical requirement, when dealing with large return lists, it is also important to handle pagination. As the objective of this operation is to retrieve the list of Artifacts we do a relation join between Artifact and Sharing entities and then apply the filter criteria. In the current implementation, the Artifact filter criteria can be applied on Artifact name, description, owner, parent artifact (if exists), created and updated times and the full text field. Some of the example search/browse queries will be as follows:
+
+\begin{itemize}
+\item
+Browse without Artifact type constraint: e.g. Select Artifacts where User2 has READ access.
+\item
+Browse with Artifact type constraint: e.g. Select Artifacts of type EXPERIMENT where User2 has READ access.
+\item
+Search with Artifact filter criteria: e.g. Select first 10 Artifacts of type EXPERIMENT where User2 has READ access and the Artifact name contains ``Ethylbenzene'' and Artifact created during last week.
+\end{itemize}
+
 The last search operation listed above can achieved as follows:
 
-
+\begin{lstlisting}
+Groups := User2.getAllMemberGroups()
+Groups := Groups U User2
+Permissions := READ.getSuperPermissions()
+Permissions := Permissions U READ
+SELECT ARTIFACT AS A FROM SHARING JOIN ARTIFACT WHERE SHARING.ACTOR IN Groups AND SHARING.PERMISSION IN  Permissions AND ARTIFACT.TYPE = EXPERIMENT AND ARTIFACT.NAME CONTAINS “EthylBenzene” AND ARTIFACT.CREATED_DATE IN LAST_WEEK LIMIT 10 OFFSET 0
+Return A
+\end{lstlisting}
 
 \section{Integration with SEAGrid}
 
