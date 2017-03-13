@@ -2,6 +2,14 @@
 
 \usepackage{booktabs} % For formal tables
 
+\usepackage{listings} % For SQL code
+\lstset{
+  basicstyle=\small\ttfamily,
+  columns=flexible,
+  breaklines=true,
+  frame=single
+}
+
 % Copyright
 \setcopyright{none}
 %\setcopyright{acmcopyright}
@@ -21,7 +29,8 @@
 \acmPrice{15.00}
 
 \begin{document}
-\title{Apache Airavata Sharing Service: A Tool for Enabling User Collaboration in Science Gateways}
+\title{Apache Airavata Sharing Service}
+\subtitle{A Tool for Enabling User Collaboration in Science Gateways}
 
 \author{Supun Nakandala}
 \affiliation{
@@ -152,52 +161,107 @@ To be Written.
 \end{figure*}
 
 \section{Proposed Solution}
-First, we formulate our requirements in the form of a logical relationships between entities and come up with a logical model to cater to the requirements. We identify the concept of ?Sharing? as the cornerstone in developing a user collaboration system. Sharing is a ternary relationship between three abstract concepts, namely ?Actor?, ?Artifact? and ?Permission? (see Fig. 1). Our model is similar to other resource level security models such as the Sharepoint item level security model[5]. In our model, an actor can be a single user or a group of users. The concept of artifact represents any data entity in the gateway (e.g experiment, output file etc.) and the permission concept captures the level of access that each actor has on the artifact associated in the sharing relationship. Sample sharing rules written using this model are shown in Fig. 1. In our model, we assume all sharing rules are explicitly defined (i.e no default behavior) and to keep the model simple, we also do not support sharing rules defined as negations, such as DISALLOW (Group1 has READ to Entity1). When an Artifact is created by the default the owner of the Artifact will be assigned with the OWNER permission which grants the global level permission on that particular Artifact. Next we look into each of these concepts and the different operations the model needs to support.
+First, we formulate our requirements in the form of a logical relationship between entities and come up with a logical model that caters to the requirements. We identify the concept of “Sharing” as the cornerstone in developing a user collaboration system. Sharing is a ternary relationship between three abstract concepts, namely ``Actor'', ``Artifact'' and ``Permission'' (see Fig. 1). Our model is similar to other resource level security models such as the Sharepoint~\cite{sharepoint} item level security model. In our model, an actor can be a single user or a group of users. The concept of artifact represents any data entity in the gateway (e.g experiment, output file etc.) and the permission concept captures the level of access that each actor has on the artifact associated in the sharing relationship. Sample sharing rules written using this model are shown in Fig. 1. In our model, we assume all sharing rules are explicitly defined (i.e no default behavior) and to keep the model simple, we also do not support sharing rules defined as negations, such as DISALLOW (Group1 has READ to Entity1). When an Artifact is created, by default the owner of the Artifact will be assigned with the OWNER permission. This grants the global level permission on that particular Artifact. Next we look into each of these concepts and the different operations the model needs to support.
 
-\begin{figure}
+\begin{figure}\label{image:permission-model}
 \includegraphics[height=3in, width=3.5in]{figures/sharing-concepts.pdf}
 \caption{Relationship between the Actor, Permission, Artifact and Sharing concepts.}
 \end{figure}
-Actor: As mentioned earlier, an Actor who participates in a sharing relationship can be either a single user or a group of users. A group will be owned by the creator of the group and can have other users or groups as child members. Child member groups can in turn have other groups, which are owned by the same owner, as child members, but cannot have cyclic group memberships. A particular user can be a member of a group via direct membership or via indirect membership (i.e. by being a member of another nested group or both). These concepts are shown in more detail in Fig. 2.
+
+Actor: As mentioned earlier, an Actor who participates in a sharing relationship can be either a single user or a group of users. A group will be owned by the creator of the group and can have other users or groups as child members. Child member groups can in turn have other groups, which are owned by the same owner, as child members, but cannot have cyclic group memberships. A particular user can be a member of a group via direct membership or via indirect membership (i.e. by being a member of another nested group or both). These concepts are shown in more detail in Fig. \ref{image:permission-model}.
 
 \begin{figure}
-\includegraphics[height=3in, width=3.5in]{figures/group-composition.pdf}
+\includegraphics[width=\columnwidth]{figures/group-composition.pdf}
 \caption{(a) Composition of a valid group with nested group memberships. All members of Group 2 are also members of Group 1. (b) Composition of an invalid group because of a cyclic group membership.}
 \end{figure}
 
-Artifact: An artifact can be any type of data item, either real or virtual, that exists in the gateway environment.	From a conventional gateway point of view, items like user projects, jobs and input/output files can be considered as artifacts. In a more generic sense, any item that needs to be shared among users or needs to be controlled with different access requirements for users falls into the category of an Artifact. An artifact can have a hierarchical structure (i.e parent-child relationships). This hierarchy becomes important when a user wants to share items at different granularities. For example when sharing a project, a user may want to share all the nested child experiments and input/output files implicitly, or share only the project content without child entities. Similar to Actors, Artifacts cannot have cyclic dependencies in their parent-child hierarchies.
+Artifact: An artifact can be any type of data item, either real or virtual, that exists in the gateway environment. From a conventional gateway point of view, items like user projects, jobs and input/output files can be considered as artifacts. In a more generic sense, any item that needs to be shared among users or needs to be controlled with different access requirements for users falls into the category of an Artifact. An artifact can have a hierarchical structure (i.e parent-child relationships). This hierarchy becomes important when a user wants to share items at different granularities. For example when sharing a project, a user may want to share all the nested child experiments and input/output files implicitly, or share only the project content without child entities. Similar to Actors, Artifacts cannot have cyclic dependencies in their parent-child hierarchies.
 
 Permission: The notion of permission captures the different access types that an Actor can have on an Artifact in a sharing relationship. For example, User1 may have READ permission on Experiment1, which will only grant access to view things in Experiment1 where as Group1 may have WRITE permission on Experiment1 which would allow a Group1 member to write/update the content in Experiment1. Sometimes it is possible that one permission may subsume the access rights defined by another permission. For example the OWNER permission (granted to the owner of an artifact) subsumes the access rights enforced by READ and WRITE permissions. A particular user may have READ permission either because the item is explicitly shared with READ permission or the user has another permission (e.g. OWNER) which subsumes the access rights of the READ permission. These kinds of relationships are captured in the form of a permission hierarchy. Similar to Actors and Artifacts these hierarchies also cannot have cyclic parent child dependencies.
 
-Operations Supported:
-	In addition to supporting the basic CRUD operations on the entities(Actor, Artifact and Permission) the model should support three different types of operations. They are:
-?	Sharing/Revoking - Explicitly sharing an Artifact with an Actor with some Permission and revoking previous sharings. The sharing can be done at different granularities. Such as sharing a parent Artifact including all its child Artifacts or sharing only the parent and not the children.
-?	Check Permission - Checking whether a specific user has a specific permission to a specific artifact.
-?	Get all accessible Actors - Retrieving the list of all actors who has the specified permission to particular. 
-?	Search/Browsing - Searching across all accessible Artifacts for a specific user with some Artifact search criteria. Browsing can be considered as a special case of search with an empty search criteria on Artifact fields.
+Operations Supported: In addition to supporting the basic CRUD operations on the entities(Actor, Artifact and Permission) the model should support four different types of operations. They are:
+\begin{itemize}
+\item
+Sharing/Revoking - Explicitly sharing an Artifact with an Actor with some Permission and revoking previous sharings. The sharing can be done at different granularities, such as sharing a parent Artifact and all its child Artifacts or sharing only the parent and not the children.
+\item
+Check Permission - Checking whether a specific user has a specific permission to a specific artifact.
+\item
+Get all accessible Actors - Retrieving the list of all actors who have the specified permission to a particular Artifact. 
+\item
+Search/Browsing - Searching across all accessible Artifacts for a specific user with some Artifact search criteria. Browsing can be considered as a special case of a search with an empty search criteria on Artifact fields.
+\end{itemize}
+
 
 \section{Implementation of the Proposed Solution}
-For the implementation we developed a system backed by a relational database engine where entities and relationships are mapped into relational tables. To keep the implementation simple we treat individual Users as a special type of Group which can have only one member. To elaborate more on how we support the different operations of our model and to make the discussion lucid, we formulate a hypothetical scenario. In our scenario we have three users, three permission types hierarchy (OWNER, READ and WRITE), the artifact types hierarchy (PROJECT, EXPERIMENT, and FILE). User1 owns one project (Project1) in which there are two experiments (Experiment 1 and 2) each with one file (File 1 and 2). User1 also has created two groups (Group 1 and 2) in which one is a nested subgroup in the other.
+For the implementation we developed a system backed by a relational database engine where entities and relationships are mapped into relational tables. To keep the implementation simple, we treat individual Users as a special type of Group which can have only one member. To elaborate more on how we support the different operations of our model and to make the discussion lucid, we formulate a hypothetical scenario. In our scenario we have three users, three permission types hierarchy (OWNER, READ and WRITE), the artifact types hierarchy (PROJECT, EXPERIMENT, and FILE). User1 owns one project (Project1) in which there are two experiments (Experiment 1 and 2) each with one file (File 1 and 2). User1 also has created two groups (Group 1 and 2) in which one is a nested subgroup in the other.
 
 \begin{figure}
-\includegraphics[height=3in, width=3.5in]{figures/usage-scenarios.pdf}
+\includegraphics[width=\columnwidth]{figures/usage-scenarios.pdf}
 \caption{Hypothetical user collaboration scenario. (a) users in the scenario, (b) Permissions hierarchy, (c) Artifact types hierarchy, (d) Artifact hierarchy owned by User1 and (e) Group hierarchy created by User1.}
 \end{figure}
 
-Sharing and Revoking: Initially only User1 has access to Project1 and all other nested artifacts (through the default assignment of the OWNER permission). Let us assume that User1 wants to give READ permission to Project1 for User2.  There are several ways to achieve this. The most basic approach would be to explicitly share Project1 with User2 with READ permission. This operation corresponds to creating an entry in Sharing which can be represented as 
+Sharing and Revoking: Initially only User1 has access to Project1 and all other nested artifacts (through the default assignment of the OWNER permission). Let us assume that User1 wants to give READ permission to Project1 for User2.  There are several ways to achieve this. The most basic approach would be to explicitly share Project1 with User2 with READ permission. This operation corresponds to creating an entry in Sharing which can be represented as:
 
-However this will allow User2 to READ Project1 and not any of its nested artifacts. If the User2 also needs to have READ permission to all nested artifacts of Project1 we need to define sharing rules for all the nested artifacts rooted at Project1, either explicitly or implicitly. The implicit way to handle this is to add an additional field in the Sharing rule to capture this information. The explicit way to handle this is to traverse through the Artifact subtree and create sharing records for each nested Artifact. The two approaches can be represented as follows:.
+\begin{lstlisting} 
+INSERT INTO SHARING(ACTOR, ARTIFACT, PERMISSION) VALUES(User2, Project1, READ)
+\end{lstlisting}
+
+However this will allow User2 to READ Project1 and not any of its nested artifacts. If User2 also needs to have READ permission to all nested artifacts of Project1 we need to define sharing rules for all the nested artifacts rooted at Project1, either explicitly or implicitly. The implicit way to handle this is to add an additional field in the Sharing rule to capture this information. The explicit way to handle this is to traverse through the Artifact subtree and create sharing records for each nested Artifact. The two approaches can be represented as follows:
+
+\begin{lstlisting} 
+INSERT INTO SHARING(ACTOR, ARTIFACT, PERMISSION, CASCADE) VALUES(User2,Project1, READ, True)
+\end{lstlisting}
+
+\begin{lstlisting} 
+Q := Queue()
+Q.dequeue(Project1)
+While NOT Q.empty()
+  X := Q.dequeue()
+  INSERT INTO SHARING(ACTOR, ARTIFACT, PERMISSION, CASCADE) VALUES(User2, X, READ, True)
+  Q.enqueueAll(X.getChildren())
+\end{lstlisting}
 
 There are tradeoffs in choosing between these two approaches. The implicit approach has constant time complexity at sharing time but requires complex and computationally expensive retrieval operations at inference time (i.e Check permission and Search operations). On the other hand, the explicit approach has O(n) time complexity (n is the number of artifacts in the subtree) and requires constant time complexity at inference time. In a practical setting, most operations the sharing model should support will be inference type operations. Hence in our model we have decided to use the explicit approach.
-One might question why we need to maintain the CASCADE field in the Sharing rule when using explicit approach where we create sharing rules for all child Artifacts. To explain this requirement, consider the following case. Assume that User1 has shared Project1 and all its child Artifacts with User1 with READ permission. Later User1 creates a new Experiment (Experiment3) which is rooted under Project1. According to our model User2 should have READ access to the new Experiment3, even though it is created after the entire project was shared. To achieve this at the Experiment3 creation time, it should inherit all the Sharing rules from its parent which are cascadable. This to determine whether a sharing rule is cascadable we need to maintain the CASCADE field in the Sharing rule.
 
-The model also provides the capability to revoke already defined sharing rules. This operation corresponds to the deletion of the specific Sharing rule. But some complications may arise in the case of cascading sharing rules due to multiple inheritance yielding the same Permission. For example, consider the following case. Assume Experiment1 and its child artifacts are shared with User2 with READ permission. This allows User2 to READ the File1. The corresponding entry in the Sharing can be written as
+One might question why we need to maintain the CASCADE field in the Sharing rule when using the explicit approach where we create sharing rules for all child Artifacts. To explain this requirement, consider the following case. Assume that User1 has shared Project1 and all its child Artifacts granting  User2 READ permission. Later User1 creates a new Experiment (Experiment3) which is rooted under Project1. According to our model User2 should have READ access to the new Experiment3, even though it is created after Project1 was shared. To achieve this, Experiment3 should inherit all the Sharing rules from its parent that  are cascadable at creation time. To determine whether a sharing rule is cascadable we need to maintain the CASCADE field in the Sharing rule.
 
-Also assume that later, User1 also decides to Share the Project1 and all its child artifacts with User2 with READ permission. This Sharing rule will also enable User2 to READ File1. But note that the corresponding Sharing rule entry for Experiment1 and File1 will be same as in the previous case. This will either duplicate the Sharing rule or would not make any changes, based on the implementation. Later if User1 wants to revoke the Sharing defined on Experiment1, all the Sharing rules that were created as a result of that Sharing have to be deleted as per the following operation.
+\begin{lstlisting}
+Parent := Experiment3.getParent()
+SharingRules := SELECT * FROM SHARING WHERE SHARING.ARTIFACT = Parent AND  SHARING.CASCADE = True
+For Rule in SharingRules
+  INSERT INTO SHARING(ACTOR, ARTIFACT, PERMISSION, CASCADE) VALUES(Rule.ACTOR, Experiment3, Rule.PERMISSION, True)
+\end{lstlisting}
+
+The model also provides the capability to revoke already defined sharing rules. This operation corresponds to the deletion of the specific Sharing rule. But some complications may arise in the case of cascading sharing rules when multiple inheritance yields the same Permission. For example, assume Experiment1 and its child artifacts are shared with User2 with READ permission. This allows User2 to READ the File1. The corresponding entry in the Sharing can be written as:
+
+\begin{lstlisting}
+INSERT INTO SHARING(ACTOR, ARTIFACT, PERMISSION, CASCADE) VALUES(User2, File1, READ, True)
+\end{lstlisting}
+
+If User1 later decides to Share the Project1 and all its child artifacts with User2 with READ permission, this Sharing rule will also enable User2 to READ File1. But note that the corresponding Sharing rule entry for Experiment1 and File1 will be the same as in the previous case. This will either duplicate the Sharing rule or would not make any changes, based on the implementation. Later if User1 wants to revoke the Sharing defined on Experiment1, all the Sharing rules that were created as a result of that Sharing have to be deleted as per the following operation.
+
+\begin{lstlisting}
+Q := Queue()
+Q.dequeue(Project1)
+While NOT Q.empty()
+  X := Q.dequeue()
+  DELETE FROM SHARING WHERE SHARING.ACTOR = User2 AND SHARING.PERMISSION = READ
+  Q.enqueueAll(X.getChildren())
+\end{lstlisting}
 
 This will end up having only one Sharing rule allowing User2 to READ and Project1 and nothing else. Hence it is important to capture the inheriting parent Artifact when recording cascading Sharing rules and at the revocation time deleting only the ones that correspond to the specific revoking parent Artifact. The modified Sharing operation on Project1 will now look as follows.
 
-Going back to our first scenario, granting User2 with READ permission on Project1, we could have achieved this in two other ways. One approach would be to use the Permission type hierarchy and Share with a Super permission of READ (e.g). An actor who has OWNER Permission on an Artifact will also have READ Permission. The other approach would be Share the Artifact with an Actor that already contains the User2. For example if Project1 is Shared with Group1 with READ Permission, then User2 will also have READ Permission on Project1 as a result of being a member of Group1. Similar to handling nested hierarchies in Artifacts, the nested hierarchies in Permission types and Groups can be handled either implicitly or explicitly. The implicit approach will record only the original Sharing  rule and will defer the heavy lifting to the inference time. On the other hand, in the explicit approach addition records will be created to each nested element. For example when Sharing with OWNER permission additional records will be created to READ and WRITE permission. However we found that most of the Permission Type and Group hierarchies in our use cases are short and flat and always will be of cascade type (e.g. when sharing with a group it is always implied that it is sharing with all the nested members). Therefore the overhead of using the implicit approach is not significant. Hence we use the implicit approach to handle Permission type and Group hierarchies.
+\begin{lstlisting}
+Q := Queue()
+Q.enqueue(Project1)
+While NOT Q.empty()
+  X := Q.dequeue()
+  INSERT INTO SHARING(ACTOR, ARTIFACT, PERMISSION, CASCADE, INHERITING_SUPER_PARENT) VALUES(User2, X, READ, True, Project1)
+  Q.enqueueAll(X.getChildren())
+\end{lstlisting}
+
+Going back to our first scenario, granting User2 with READ permission on Project1, we could have achieved this in two other ways. One approach would be to use the Permission type hierarchy and Share Project1 with a Super permission of READ (e.g). An actor who has OWNER Permission on an Artifact will also have READ Permission. The other approach would be to Share the Artifact with an Actor that contains the User2. For example if Project1 is Shared with Group1 with READ Permission, then User2 will also have READ Permission on Project1 as a result of being a member of Group1. Similar to handling nested hierarchies in Artifacts, the nested hierarchies in Permission types and Groups can be handled either implicitly or explicitly. The implicit approach will record only the original Sharing  rule and will defer the heavy lifting to the inference time. On the other hand, in the explicit approach, addition records will be created to each nested element. For example when Sharing with OWNER permission additional records will be created to READ and WRITE permission. However we found that most of the Permission Type and Group hierarchies in our use cases are short and flat and always will be of cascade type (e.g. when sharing with a group it is always implied that it is sharing with all the nested members). Therefore the overhead of using the implicit approach is not significant. Hence we use the implicit approach to handle Permission type and Group hierarchies.
+
 Check Permissions: In our model since we put most of the heavy lifting on the sharing and revoking operations, inference operations become straightforward and less costly. The Check Permissions operation tries to find out whether a specific Actor has a specific Permission to a specific Artifact. For example consider that we want find whether User2 has READ Permission to Project1. In our model, which implicitly captures nested aspects in Permissions and Groups, we need to first find all the Permissions which subsume the READ permission and all the groups that User2 is a member of. After finding those, this operation can be easily executed as follows.
 
 Get all Accessible Actors:
