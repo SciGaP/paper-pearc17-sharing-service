@@ -34,7 +34,7 @@
 
 \author{Supun Nakandala}
 \affiliation{
-  \institution{Science Gateway Research Center}
+  \institution{Science Gateways Research Center}
   \institution{Indiana University}
   \city{Bloomington} 
   \state{IN}
@@ -43,7 +43,7 @@
 
 \author{Suresh Marru}
 \affiliation{
-  \institution{Science Gateway Research Center}
+  \institution{Science Gateways Research Center}
    \institution{Indiana University}
   \city{Bloomington} 
   \state{IN}
@@ -52,7 +52,7 @@
 
 \author{Marlon Piece}
 \affiliation{
-  \institution{Science Gateway Research Center}
+  \institution{Science Gateways Research Center}
    \institution{Indiana University}
   \city{Bloomington} 
   \state{IN}
@@ -61,7 +61,7 @@
 
 \author{Sudhakar Pamidighantam}
 \affiliation{
-  \institution{Science Gateway Research Center}
+  \institution{Science Gateways Research Center}
  \institution{Indiana University}
   \city{Bloomington} 
   \state{IN}
@@ -160,8 +160,10 @@ Science Gateways provide user environments and a set of supporting services that
 \section{Introduction}
 
 Science gateways are science-centric user environments and supporting cyberinfrastructure that enable broader and more effective use of scientific computing resources, applications, and data \cite{gatewaySurvey2015}. Because gateways allow users to perform operations on high end resources, authentication and authorization have long been cornerstones of gateway infrastructure \cite{airavataSecurity2016},\cite{welch2007aaaa}. Authenticated access also supports another hallmark of gateways: the collection of user interactions into computational experiments that the researcher can use to monitor long running executions, retrieve results, and recall how specific results were achieved \cite{cipres2010}, \cite{seagridCommunity2016}, \cite{ultrascanAiravata2014}, \cite{nsg2013}. 
-Sharing results with colleagues and making certain results publically available is the outcome of research. This is an example of user-driven authorization of something the user owns (data and metadata) rather than service provider-driven authorization of something the service provider owns (computing resources, licensed applications, etc).  Despite the fundamental nature of sharing in research, this is not a first class capability within many popular gateways. This paper examines the requirements and provides an implementation for user-directed sharing, which we apply to several popular science gateways. 
-Our conceptual approach is based on group membership. Computational experiments are grouped (or tagged) into one or more organizational structures. In Apache Airavata, for example, “projects” contain experiments. These entities are by default privately owned by the creator.  The extensions are obvious: give other users and groups of users privileges to read the contents of specific experiments and groups of experiments. A subset group of these users may have additional privileges to copy, modify and execute experiments and groups of experiments. For even these simple cases, however, we know from common examples such as UNIX groups that we must reason carefully about how to implement inherited permissions, the nature of ownership and its transfer, and similar issues.
+
+Sharing results with colleagues and making certain results publicly available is the outcome of research. This is an example of user-driven authorization of something the user owns (data and metadata) rather than service provider-driven authorization of something the service provider owns (computing resources, licensed applications, etc).  Despite the fundamental nature of sharing in research, this is not a first class capability within many popular gateways. This paper examines the requirements and provides an implementation for user-directed sharing, which we apply to several popular science gateways. 
+
+Our conceptual approach is based on group membership. Computational experiments are grouped (or tagged) into one or more organizational structures. In Apache Airavata, for example, ``projects'' contain experiments. These entities are by default privately owned by the creator.  The extensions are obvious: give other users and groups of users privileges to read the contents of specific experiments and groups of experiments. A subset group of these users may have additional privileges to copy, modify and execute experiments and groups of experiments. For even these simple cases, however, we know from common examples such as UNIX groups that we must reason carefully about how to implement inherited permissions, the nature of ownership and its transfer, and similar issues.
 
 \section{Enabling collaborations within Science Gateways using Groups}
 
@@ -174,27 +176,27 @@ Use Case 1 & Sharing and Revoking capabilities.\\
 \hline
 Use Case 2 & Check Permission of a given Entity.\\
 \hline
-Use Case 3 & Get all accessible entities of a given user.\\
+Use Case 3 & Sharing and Revoking r.\\
 \hline
 Use Case 4 & Browse and Search within all accessible entities for a given user.\\
 \hline
 \end{tabular}
 \caption{Gateway Use cases for Collaboration}
-\end{table}\label{table:usecases}
+\label{table:usecases}
+\end{table}
 
 \begin{figure*}
-\includegraphics[height=3in, width=7in]{figures/gateway-integaration-overview.pdf}
+\includegraphics[height=3.5in, width=7in]{figures/gateway-integaration-overview.pdf}
 \caption{High level architectural overview. SEAGrid Gateway is built over Apache Airavata for all data and execution capabilities; CIPRES and NSG Gateways are built over Workbench Framework and are exploring use of Apache Airavata for Data Sharing capabilities. The paper focuses on Sharing Service (green color box) and existing literature on Airavata discuss other capabilities (blue colored boxes).}
 \end{figure*}
 
-Generic implementations of groups, and “groups as a service” software exist as standalone tools and services and are integrated with common identity management software. LDAP Groups \cite{aclLDAP} and Grouper \cite{grouperWebsite} are well known examples. Grouper is a comprehensive group management software and can be deployed at university scale to manage complicated collections of users and other entities. Grouper can very well be adapted to meet the gateway Use Cases 1 and 2. But despite their power and flexibility in handling groups, the lack of flexible querying makes it not a good match for gateway Use Cases 3 and 4.
+Generic implementations of groups, and ``groups as a service'' software exist as standalone tools and services and are integrated with common identity management software. LDAP Groups \cite{aclLDAP} and Grouper \cite{grouperWebsite} are well known examples. Grouper is a comprehensive group management software and can be deployed at university scale to manage complicated collections of users and other entities. Grouper can very well be adapted to meet the gateway Use Cases 1 and 2. But despite their power and flexibility in handling groups, the lack of flexible querying makes it not a good match for gateway Use Cases 3 and 4.
 
-The core of the problem is that assigning an arbitrary parent-child relationship between groups does not directly express the needed permission-based relationship between the groups.  The parent-child relationship is arbitrary and so must rely on conventions: you can imply permissions by making user groups parents of resource groups or the other way around by making resource groups the parents of user groups. Notice also that we need to define multiple groups to express the relationships between the two entity collections: a “read-only” group and a “read-write” group, for instance. To change an existing permission requires two operations: the user must be removed from the old group and added to the new group, introducing the possibilities of inconsistencies. One could imagine having conflicts if the conventions are not strictly followed. Imagine if a gateway sometimes put user groups into resource groups and other times put resource groups into user groups within a single deployment. The gateway then may get conflicting information in its queries about a user’s permissions. If such potential problems become real, they undermine users’ trust in the gateway. For gateways that support applications that use regulated data such as personal health information, trustworthy approaches to sharing are essential.
+The core of the gateway use cases is to enable ``Browsing and searching'' within accessible data. As users perform large number of computations, the sharable entities for a given user grows large. An implied requirement for retrieving shared results is to paginate the resultant entities. We could potentially use Grouper like software for sharing needs, but implementing the browse and search of artifacts will deviate the systems for their intended usage. More over the Grouper like solutions are designed to run at University scale and assume dedicated personal resources to setup and operate. Gateways require a much lighter weight solutions. 
 
-It is thus generally better to explicitly, semantically express relationships between entities if these relationships are fundamental to the usage scenario. There are also practical performance considerations: searches such as “return all the resources that a member of this group has permission to modify” is not efficiently implemented in a parent-child or tree data model. In addition generic group solutions return user or entity id’s and require calls to the entity catalogs to fetch more information like entity name and entity descriptions. When these queries are done at scale and as entities grow in number, the reduced performance impacts usability.
+One other non-technical but pragmatic reason include governance of the project itself. There are certainly other open source alternative group management software. The distinction being a ``open source'' and being community managed via a governance model are summarized in \cite{o2007governance}. Our hypothesis is that science gateway community require a light weight, gateway use case focused and open governed open source project to build  key collaboration capabilities. 
 
-To address the limitations of existing generic group management software and to have the flexibility to implement the above gateway collaboration use cases, we propose a relational data model in which the relationship between groups, permissions and resources is explicitly named and directed. At the simplest conceptual level, this approach provides an unambiguous representation of permissions on access to users’ projects and computational experiments. This is an important design consideration given the security implications of sharing results. It furthermore leads to a more efficient, if specialized, implementation of queries.
-
+To address the limitations of existing generic group management software and to have the flexibility to implement the above gateway collaboration use cases, we propose a relational data model in which the relationship between groups, permissions and resources is explicitly named and directed. At the simplest conceptual level, this approach provides an unambiguous representation of permissions on access to users' projects and computational experiments. This is an important design consideration given the security implications of sharing results. It furthermore leads to a more efficient, if specialized, implementation of queries.
 
 \section{Proposed Solution}
 We identify the concept of Sharing as the cornerstone in developing a user collaboration system. Sharing is a ternary relationship between three abstract concepts: ``Actor'', ``Artifact'' and ``Permission'' (see Figure \ref{image:permission-model}). Our model is similar to other resource level security models such as the Sharepoint item level security model \cite{sharePointSecurity}. An actor can be a single user, a group of users or even a group of other groups. The concept of Artifact represents any data entities in a gateway (such as a project, an experiment or an output file) and the Permission captures the level of access that each actor has on the artifact associated in the sharing relationship. Sample sharing rule defined using this model can be expressed as User1 has READ permission to Experiment1. In our model, we assume all sharing rules are explicitly defined; i.e no default behavior. To keep the model simple, we also do not support sharing rules defined as negations, such as DISALLOW (User1 has READ permission to Experiment1). When an Artifact is created, by default the owner of the Artifact will be assigned with the OWNER permission. This grants the global level permission on that particular Artifact. Next we look into each of these concepts in more detail.
@@ -341,13 +343,28 @@ A geographically distributed, highly interdisciplinary neuroscience research gro
 
 EEGLAB \cite{delorme2004eeglab} is a widely used software for processing experimental eletrophysiological (EEG) data by thousands of cognitive neuroscientists worldwide. Researchers are now interested in meta-analysis of source-resolved EEG measures across studies. This will allow research results of individual researchers/labs to be analyzed/compared (meta-analysis) to gain deeper understanding of brain functions at a higher level. To be able to do this researchers will need a mechanism, within NSG, where they can make their data shareable such as by tagging results that they want to share with other researchers or make it public. This will require different level of sharing capabilities. This will then allow other researchers to perform meta-analysis of research results at a higher level using computing power provided by NSG.
 
-Based on user feedback and the use cases above, tools for sharing data between accounts  are a priority feature for CIPRES Workbench users. Accordingly, we are integrating the data sharing service with the CIPRES Workbench framework. Our approach will take a somewhat different strategy from the SEAGrid integration described above. A schematic is shown in Figure 4. For the Workbench Framework, a separate group management server will allow users to perform group and user management. This will allow full access to all group/user management functions in the SciGaP sharing service without requiring any User Interface development. The CIPRES Workbench will retain an internal representation of Experiment configuration, so the shared Entities will be project folders.  Within the Workbench code, project folder identifiers will be used to determine user access to contained Data and Experiments (Tasks in workbench terminology). Integration with the Experiment Catalog will not be required.
+Based on user feedback and the use cases above, tools for sharing data between accounts  are a priority feature for CIPRES Workbench users. Accordingly, we are integrating the data sharing service with the CIPRES Workbench framework. Our approach will take a somewhat different strategy from the SEAGrid integration described above. For the Workbench Framework, a separate group management server will allow users to perform group and user management. This will allow full access to all group/user management functions in the SciGaP sharing service without requiring any User Interface development. The CIPRES Workbench will retain an internal representation of Experiment configuration, so the shared Entities will be project folders.  Within the Workbench code, project folder identifiers will be used to determine user access to contained Data and Experiments (Tasks in workbench terminology). Integration with the Experiment Catalog will not be required.
 
-In the implementation for CIPRES and NSG, users will be able to access shared folders and control access to their experiments and data through the browser interface of the respective applications. Authenticated users can configure sharing/display preferences for their account profile. Folders (Artifacts) the user creates can be configured individually for sharing with Users or Groups. The new interface will also provide users with the ability to check, set, and revoke sharing permissions on Artifacts they create. For data shared with the user, a “shared data” folder will appear in the user interface. Users can view shared Files, Experiments, and Projects. In our initial implementation, read-only Artifacts can be cloned from the shared folder, and then can be modified and resubmitted; the cloned jobs will be owned by the submitting user.
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/cipres-mock-1.pdf}
+\caption{Mock user interface listing sharing summary}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/cipres-mock-2.pdf}
+\caption{Mock implementation to choose a selected user or group to share a folder}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/cipres-mock-3.pdf}
+\caption{Read only permissions of a shared folder alerts the user to clone but not write into it}
+\end{figure}
+
+In the implementation for CIPRES and NSG, users will be able to access shared folders and control access to their experiments and data through the browser interface of the respective applications. Authenticated users can configure sharing/display preferences for their account profile. Folders (Artifacts) the user creates can be configured individually for sharing with Users or Groups. Figures 4, 5 and 6 illustrated the mocked interfaces of these features being built over Apache Airavata's Sharing Service. The new interface will also provide users with the ability to check, set, and revoke sharing permissions on Artifacts they create. For data shared with the user, a ``shared data'' folder will appear in the user interface. Users can view shared Files, Experiments, and Projects. In our initial implementation, read-only Artifacts can be cloned from the shared folder, and then can be modified and resubmitted; the cloned jobs will be owned by the submitting user.
 
 \section{Related Work}
 
-Internet2’s Grouper \cite{grouperWebsite} is an access management system that is widely used in universities that can support most of the required features in our proposed solution. Grouper provides comprehensive and efficient group management functionalities including rule and time based group membership definitions and ability to define groups based on complex group math operations (unions, intersections and differences) that are generally beyond the simple group management requirements in gateways. Features in Grouper such roles, attributes, and permissions can be used to implement our sharing model. If implemented using Grouper, the system can easily support the sharing and revoking of Artifacts, check permission, and get all accessible users operations. However the lack of flexibility in the Grouper’s search/browse APIs hinders the system in efficiently fulfilling the search/browse operations required by the Gateways users. Search/Browse operations are an important aspect for Gateways, as we have described.
+Internet2's Grouper \cite{grouperWebsite} is an access management system that is widely used in universities that can support most of the required features in our proposed solution. Grouper provides comprehensive and efficient group management functionalities including rule and time based group membership definitions and ability to define groups based on complex group math operations (unions, intersections and differences) that are generally beyond the simple group management requirements in gateways. Features in Grouper such roles, attributes, and permissions can be used to implement our sharing model. If implemented using Grouper, the system can easily support the sharing and revoking of Artifacts, check permission, and get all accessible users operations. However the lack of flexibility in the Grouper's search/browse APIs hinders the system in efficiently fulfilling the search/browse operations required by the Gateways users. Search/Browse operations are an important aspect for Gateways, as we have described.
 
 SeedMe \cite{chourasia2013seedme} is a cyberinfrastructure platform that enables seamless sharing and visualization of computer simulation outputs which runs on HPC infrastructures through a web based tool. It enables users to conveniently view and access simulation outputs. Users can create collections of data items and share publicly or with a specified group of users. In the current implementation it has a single permission level, which grants permission to shared users to view and comment on the collection. Also it lacks the ability to define reusable user groups and requires explicitly defining the list of users every time when sharing a collection.
 
@@ -355,19 +372,12 @@ Globus Groups \cite{globusFileSharing} can be used for access control by other G
 
 \section{Conclusions}
 
+In this paper we presented a generic software design and implementation of collaboration capabilities in Science Gateways. As the adoption of gateways accelerates collaboration amongst users becomes second nature and an expected feature. Such new capabilities not only multiply the impact of these infrastructures but provide maximum use of computational results. 
+
+The key contribution of the paper is to foster user collaborations based on group memberships. The paper discusses the underpinning architectural concepts, a relational data model in which the relationship between groups, permissions and resources are flexibly defined and managed. We further discussed the implementation of these concepts to meet the 4 key gateway requirements of Sharing and Revoking; Checking permissions; Browsing and Searching across all accessible entities. We further discussed the integration with SEAGrid gateway and evaluations by CIPRES and NSG Science Gateways. 
 
 %\begin{acks}
-%  The authors would like to thank Dr. Yuhua Li for providing the
-%  matlab code of  the \textit{BEPS} method. 
 %
-%  The authors would also like to thank the anonymous referees for
-%  their valuable comments and helpful suggestions. The work is
-%  supported by the \grantsponsor{GS501100001809}{National Natural
-%    Science Foundation of
-%    China}{http://dx.doi.org/10.13039/501100001809} under Grant
-%  No.:~\grantnum{GS501100001809}{61273304}
-%  and~\grantnum[http://www.nnsf.cn/youngscientsts]{GS501100001809}{Young
-%    Scientsts' Support Program}.
 %
 %\end{acks}
 
