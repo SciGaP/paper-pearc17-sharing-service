@@ -10,23 +10,14 @@
   frame=single
 }
 
-% Copyright
-\setcopyright{none}
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-%\setcopyright{rightsretained}
+\renewcommand*\copyright{{%
+  \usefont{EU1}{lmr}{m}{n}\textcopyright}}
 
-% DOI
-%\acmDOI{10.475/123_4}
-
-% ISBN
-%\acmISBN{123-4567-24-567/08/06}
-
-%Conference
-\acmConference[PEARC17]{Practice \& Experience in Advanced Research Computing}{July 2017}{New Orleans, LO USA} 
-\acmYear{2017}
-\copyrightyear{2017}
-\acmPrice{15.00}
+\copyrightyear{2017} 
+\acmYear{2017} 
+\setcopyright{acmcopyright}
+\acmConference{PEARC17}{July 09-13, 2017}{New Orleans, LA, USA}\acmPrice{15.00}\acmDOI{http://dx.doi.org/10.1145/3093338.3093359}
+\acmISBN{978-1-4503-5272-7/17/07}
 
 \begin{document}
 \title{Apache Airavata Sharing Service}
@@ -176,9 +167,7 @@ Use Case 1 & Sharing and Revoking capabilities.\\
 \hline
 Use Case 2 & Check Permission of a given Entity.\\
 \hline
-Use Case 3 & Sharing and Revoking r.\\
-\hline
-Use Case 4 & Browse and Search within all accessible entities for a given user.\\
+Use Case 3 & Browse and Search within all accessible entities for a given user.\\
 \hline
 \end{tabular}
 \caption{Gateway Use cases for Collaboration}
@@ -186,7 +175,7 @@ Use Case 4 & Browse and Search within all accessible entities for a given user.\
 \end{table}
 
 \begin{figure*}
-\includegraphics[height=3.5in, width=7in]{figures/gateway-integaration-overview.pdf}
+\includegraphics[width=5.5in]{figures/gateway-integaration-overview.pdf}
 \caption{High level architectural overview. SEAGrid Gateway is built over Apache Airavata for all data and execution capabilities; CIPRES and NSG Gateways are built over Workbench Framework and are exploring use of Apache Airavata for Data Sharing capabilities. The paper focuses on Sharing Service (green color box) and existing literature on Airavata discuss other capabilities (blue colored boxes).}
 \end{figure*}
 
@@ -351,7 +340,7 @@ Based on user feedback and the use cases above, tools for sharing data between a
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\columnwidth]{figures/cipres-mock-2.pdf}
+\includegraphics[height=3in]{figures/cipres-mock-2.pdf}
 \caption{Mock implementation to choose a selected user or group to share a folder}
 \end{figure}
 
